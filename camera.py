@@ -49,10 +49,10 @@ def triggerThread():
     time.sleep(2)
     node_map_remote_device.FindNode("TriggerSoftware").Execute()
 
-def imageAquisition(datastream, name):
-    # ids_peak.Library.Initialize()
+def imageAquisition(datastream):
+    #ids_peak.Library.Initialize()
     #while True: 
-    _buffer = datastream.WaitForFinishedBuffer(5000)
+    _buffer = datastream.WaitForFinishedBuffer(10000)
     #image = ids_peak_ipl.Image_CreateFromSizeAndBuffer(
     #        buffer.PixelFormat(),
     #        buffer.BasePtr(),
@@ -64,79 +64,70 @@ def imageAquisition(datastream, name):
     converted_ipl_image = ipl_image.ConvertTo(ids_peak_ipl.PixelFormatName_BGRa8)
     timestr = time.strftime("%Y%m%d-%H_%M_%S")
     image_np_array = converted_ipl_image.get_numpy()
-    cv2.imwrite(f"./output/{name}_{timestr}.png", image_np_array)
+    cv2.imwrite(f"./output/top_view_{timestr}.png", image_np_array)
     datastream.QueueBuffer(_buffer)
-    # ids_peak.Library.Close()
+    ids_peak.Library.Close()
     logger.success("image aquisition done")
 
-    return f"./output/{name}_{timestr}.png" 
-
-
-def takePicture():
+if __name__ == "__main__":
     ids_peak.Library.Initialize()
     logger.info("open camera")
     device = open_camera()
     logger.success("camera opened")
     try: 
-        setCameraParams(device)
-        logger.info("set camera params")
-        setCameraParams(device)
-        logger.success("camera params set")
-        logger.info("start acquisition")
-        node_map_remote_device = device.RemoteDevice().NodeMaps()[0]
-        node_map_remote_device.FindNode("UserSetSelector").SetCurrentEntry("Default")
-        node_map_remote_device.FindNode("UserSetLoad").Execute()
-        node_map_remote_device.FindNode("TriggerSelector").SetCurrentEntry("ReadOutStart")
-        node_map_remote_device.FindNode("TriggerMode").SetCurrentEntry("On")
-        node_map_remote_device.FindNode("TriggerSource").SetCurrentEntry("Software")
-        logger.success("acquisition setup done")
-        #for entry in node_map_remote_device.FindNode("TriggerSelector").Entries(): 
-        #    print(entry.SymbolicValue())
+        while True:
+            print("haha")
+            setCameraParams(device)
+            logger.info("set camera params")
+            setCameraParams(device)
+            logger.success("camera params set")
+            logger.info("start acquisition")
+            node_map_remote_device = device.RemoteDevice().NodeMaps()[0]
+            node_map_remote_device.FindNode("UserSetSelector").SetCurrentEntry("Default")
+            node_map_remote_device.FindNode("UserSetLoad").Execute()
+            node_map_remote_device.FindNode("TriggerSelector").SetCurrentEntry("ReadOutStart")
+            node_map_remote_device.FindNode("TriggerMode").SetCurrentEntry("On")
+            node_map_remote_device.FindNode("TriggerSource").SetCurrentEntry("Software")
+            logger.success("acquisition setup done")
+            #for entry in node_map_remote_device.FindNode("TriggerSelector").Entries(): 
+            #    print(entry.SymbolicValue())
 
-        #node_map_remote_device.FindNode("TriggerSource").SetCurrentEntry("Software")
+            #node_map_remote_device.FindNode("TriggerSource").SetCurrentEntry("Software")
 
-        datastreams = device.DataStreams()
-        if datastreams.empty():
-            device = None
-            exit(-1)
-        datastream = datastreams[0].OpenDataStream()
-        if datastream:
-        # Flush queue and prepare all buffers for revoking
-            datastream.Flush(ids_peak.DataStreamFlushMode_DiscardAll)
-        # Clear all old buffers
-            for buffer in datastream.AnnouncedBuffers():
-                datastream.RevokeBuffer(buffer)
-            payload_size = node_map_remote_device.FindNode("PayloadSize").Value()
-            # Get number of minimum required buffers
-            num_buffers_min_required = datastream.NumBuffersAnnouncedMinRequired()
-            # Alloc buffers
-            for count in range(num_buffers_min_required):
-                buffer = datastream.AllocAndAnnounceBuffer(payload_size)
-                datastream.QueueBuffer(buffer)
+            datastreams = device.DataStreams()
+            if datastreams.empty():
+                device = None
+                exit(-1)
+            datastream = datastreams[0].OpenDataStream()
+            if datastream:
+            # Flush queue and prepare all buffers for revoking
+                datastream.Flush(ids_peak.DataStreamFlushMode_DiscardAll)
+            # Clear all old buffers
+                for buffer in datastream.AnnouncedBuffers():
+                    datastream.RevokeBuffer(buffer)
+                payload_size = node_map_remote_device.FindNode("PayloadSize").Value()
+                # Get number of minimum required buffers
+                num_buffers_min_required = datastream.NumBuffersAnnouncedMinRequired()
+                # Alloc buffers
+                for count in range(num_buffers_min_required):
+                    buffer = datastream.AllocAndAnnounceBuffer(payload_size)
+                    datastream.QueueBuffer(buffer)
 
-        datastream.StartAcquisition(ids_peak.AcquisitionStartMode_Default, ids_peak.DataStream.INFINITE_NUMBER)
-        node_map_remote_device.FindNode("TLParamsLocked").SetValue(1)
-        node_map_remote_device.FindNode("AcquisitionStart").Execute()
+            datastream.StartAcquisition(ids_peak.AcquisitionStartMode_Default, ids_peak.DataStream.INFINITE_NUMBER)
+            node_map_remote_device.FindNode("TLParamsLocked").SetValue(1)
+            node_map_remote_device.FindNode("AcquisitionStart").Execute()
 
-        imageAquisitionThread = threading.Thread(target=imageAquisition, args=(datastream,))
-        imageAquisitionThread.start()
-        triggerThread = threading.Thread(target=triggerThread)
-        triggerThread.start()
+            imageAquisitionThread = threading.Thread(target=imageAquisition, args=(datastream,))
+            imageAquisitionThread.start()
+            triggerThread = threading.Thread(target=triggerThread)
+            triggerThread.start()
 
-        imageAquisitionThread.join()
-        triggerThread.join()
+            imageAquisitionThread.join()
+            triggerThread.join()
 
-        return imageAquisitionThread.result
+            time.sleep(60)
 
     except Exception as e:
         print(e)
     logger.info("close camera and library")
     ids_peak.Library.Close()
-
-
-
-if __name__ == "__main__":
-    a = takePicture()
-    print(a)
-
-
