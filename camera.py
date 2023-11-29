@@ -136,6 +136,7 @@ def takePicture():
 
 
 if __name__ == "__main__":
-    
+    a = takePicture()
+    print(a)
 
 
