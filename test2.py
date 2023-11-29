@@ -59,8 +59,8 @@ def imageAquisition(datastream):
     datastream.QueueBuffer(_buffer)
     ids_peak.Library.Close()
     logger.success("image aquisition done")
-
-    return f"./output/{timestr}.png"
+    result = f"./output/{timestr}.png"
+    return result
 
 def takePicture():
     ids_peak.Library.Initialize()
@@ -112,7 +112,7 @@ def takePicture():
 
         result = imageAquisitionThread.join()
         triggerThread.join()
-
+        print(result)
         return result
 
     except Exception as e:
