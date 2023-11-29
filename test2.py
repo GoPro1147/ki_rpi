@@ -49,7 +49,7 @@ def trigger(node_map_remote_device):
     time.sleep(2)
     node_map_remote_device.FindNode("TriggerSoftware").Execute()
 
-def imageAquisition(datastream):
+def imageAquisition(datastream, filename):
     _buffer = datastream.WaitForFinishedBuffer(10000)
     ipl_image = ids_peak_ipl_extension.BufferToImage(_buffer)
     converted_ipl_image = ipl_image.ConvertTo(ids_peak_ipl.PixelFormatName_BGRa8)
@@ -61,6 +61,10 @@ def imageAquisition(datastream):
     logger.success("image aquisition done")
     result = f"./output/{timestr}.png"
     return result
+
+def makeFileName():
+    timestr = time.strftime("%Y%m%d-%H_%M_%S")
+    return f"./output/{timestr}.png"
 
 def takePicture():
     ids_peak.Library.Initialize()
@@ -104,16 +108,16 @@ def takePicture():
         datastream.StartAcquisition(ids_peak.AcquisitionStartMode_Default, ids_peak.DataStream.INFINITE_NUMBER)
         node_map_remote_device.FindNode("TLParamsLocked").SetValue(1)
         node_map_remote_device.FindNode("AcquisitionStart").Execute()
-
-        imageAquisitionThread = threading.Thread(target=imageAquisition, args=(datastream,))
+        filename = makeFileName()
+        imageAquisitionThread = threading.Thread(target=imageAquisition, args=(datastream, filename))
         imageAquisitionThread.start()
         triggerThread = threading.Thread(target=trigger, args=(node_map_remote_device,))
         triggerThread.start()
 
-        result = imageAquisitionThread.join()
+        imageAquisitionThread.join()
         triggerThread.join()
-        print(result)
-        return result
+        
+        return filename
 
     except Exception as e:
         print(e)
