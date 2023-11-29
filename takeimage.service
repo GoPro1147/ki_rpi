@@ -1,0 +1,16 @@
+[Unit]
+Description=FastAPI Service
+After=network.target
+
+[Service]
+User=your_username  # FastAPI를 실행할 유저 이름 입력
+Group=your_group    # FastAPI를 실행할 그룹 이름 입력
+WorkingDirectory=/home/pi/ki_kpi/ # FastAPI 애플리케이션 폴더 경로 입력
+ExecStart=/usr/bin/python3 -m uvicorn app:app --host 0.0.0.0 --port 8000  # FastAPI 실행 명령어 입력
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=fastapi
+
+[Install]
+WantedBy=multi-user.target
