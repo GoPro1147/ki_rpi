@@ -53,14 +53,11 @@ def imageAquisition(datastream, filename):
     _buffer = datastream.WaitForFinishedBuffer(10000)
     ipl_image = ids_peak_ipl_extension.BufferToImage(_buffer)
     converted_ipl_image = ipl_image.ConvertTo(ids_peak_ipl.PixelFormatName_BGRa8)
-    timestr = time.strftime("%Y%m%d-%H_%M_%S")
     image_np_array = converted_ipl_image.get_numpy()
-    cv2.imwrite(f"./output/top_view_{timestr}.png", image_np_array)
+    cv2.imwrite(filename, image_np_array)
     datastream.QueueBuffer(_buffer)
     ids_peak.Library.Close()
     logger.success("image aquisition done")
-    result = f"./output/{timestr}.png"
-    return result
 
 def makeFileName():
     timestr = time.strftime("%Y%m%d-%H_%M_%S")
@@ -71,7 +68,7 @@ def takePicture():
     logger.info("open camera")
     device = open_camera()
     logger.success("camera opened")
-    try: 
+    try:
         setCameraParams(device)
         logger.info("set camera params")
         setCameraParams(device)

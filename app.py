@@ -17,4 +17,4 @@ async def get_image():
     response = FileResponse(image_path)
     os.remove(image_path)
     # 파일 응답 반환
-    return FileResponse(image_path)
+    return response
