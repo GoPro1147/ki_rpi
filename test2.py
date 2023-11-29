@@ -107,7 +107,7 @@ def takePicture():
 
         imageAquisitionThread = threading.Thread(target=imageAquisition, args=(datastream,))
         imageAquisitionThread.start()
-        triggerThread = threading.Thread(target=trigger)
+        triggerThread = threading.Thread(target=trigger, args=(node_map_remote_device,))
         triggerThread.start()
 
         imageAquisitionThread.join()
