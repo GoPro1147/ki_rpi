@@ -45,7 +45,7 @@ def setCameraParams(device, autoExposure=True):
     except Exception as e:
         print(e)
         
-def trigger():
+def trigger(node_map_remote_device):
     time.sleep(2)
     node_map_remote_device.FindNode("TriggerSoftware").Execute()
 
@@ -110,8 +110,10 @@ def takePicture():
         triggerThread = threading.Thread(target=trigger, args=(node_map_remote_device,))
         triggerThread.start()
 
-        imageAquisitionThread.join()
+        result = imageAquisitionThread.join()
         triggerThread.join()
+
+        return result
 
     except Exception as e:
         print(e)
@@ -119,4 +121,5 @@ def takePicture():
     ids_peak.Library.Close()
 
 if __name__ == "__main__":
-    takePicture()
+    a = takePicture()
+    print(a)
