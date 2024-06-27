@@ -6,6 +6,10 @@ from camera import takePicture
 
 app = FastAPI()
 
+if not os.path.exists('output'):
+    os.makedirs('output')
+
+
 def delete_file(file_path: str):
     if os.path.exists(file_path):  # 파일이 존재하는지 확인
         os.remove(file_path)  # 파일 삭제
